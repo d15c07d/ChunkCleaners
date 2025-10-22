@@ -1,0 +1,18 @@
+name: ChunkCleaners
+main: me.d15c07d.chunkcleaners.ChunkCleanersPlugin
+version: 1.0.0
+api-version: 1.21
+author: d15c07d
+description: Chunk Cleaner plugin for Paper 1.21.10.
+commands:
+  chunkcleaners:
+    description: Base command for Chunk Cleaners
+    aliases: [cc]
+    usage: /<command> <give|list|reload|admin>
+  permissions:
+    chunkcleaners.admin:
+      description: Permission for chunk cleaners admin commands.
+      default: op
+    chunkcleaners.give:
+      description: Allows players with this permission to give chunk cleaners.
+      default: op

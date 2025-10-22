@@ -1,0 +1,201 @@
+# ChunkCleaners
+# Version 1.0.0 by d15c07d
+#
+# Supported placeholders (used in messages/holograms/actionbar):
+#   {remaining}  - seconds remaining (ETA)
+#   {progress}   - percent complete 0-100
+#   {coords}     - world:chunkX,chunkZ (or world:x,z)
+#   {type}       - cleaner type key
+#   {amount}     - numeric amount
+#   {player}     - player name
+#   {id}         - task UUID
+#   {count}      - number of active cleaners
+# ----------------------------------------------------------------
+types:
+  small:
+    display-name: "<green>Small Cleaner</green>"
+    description: "Clears a 1x1 chunk area quickly.\nTip: place on flat ground."
+    size: 1
+    block: END_PORTAL_FRAME
+    duration: 10
+
+  medium:
+    display-name: "<yellow>Medium Cleaner</yellow>"
+    description: "Clears a 2x2 chunk area over time."
+    size: 2
+    block: END_PORTAL_FRAME
+    duration: 30
+
+  large:
+    display-name: "<red>Large Cleaner</red>"
+    description: "Clears a 4x4 chunk area. Use with caution."
+    size: 4
+    block: END_PORTAL_FRAME
+    duration: 90
+
+# ----------------------------------------------------------------
+# Hologram and visuals
+# - You can configure either a single string (hologram.text) or multiple
+#   lines (hologram.lines) — lines are preferred for multi-line holograms.
+# - hologram.offset moves the hologram vertically above the placed block.
+# - line spacing and other advanced behavior can be added later.
+# ----------------------------------------------------------------
+hologram:
+  enabled: true
+  # Vertical offset above the placed block (in blocks)
+  offset: 0.6
+  lines:
+    - "<gold>Cleaning: <yellow>{remaining}s</yellow>"
+    - "<gray>{progress}% complete</gray>"
+  # Fallback single-line text if 'lines' is not defined or empty.
+  text: "<gold>Cleaning: <yellow>{remaining}s</yellow>"
+
+# ----------------------------------------------------------------
+# Actionbar display shown periodically to the player while cleaner runs.
+# Use {remaining} and {progress} placeholders.
+# ----------------------------------------------------------------
+actionbar:
+  enabled: true
+  message: "&aChunk Cleaner &7- &e{remaining}s &8[&e{progress}%&8]"
+
+# ----------------------------------------------------------------
+# Messages (general, admin and main). All are editable for localization.
+# Use MiniMessage or legacy '&' codes. Several placeholders supported.
+# ----------------------------------------------------------------
+messages:
+  # General (non-admin) messages
+  no_permission: "<red>You don't have permission to do that."
+  invalid_type: "<red>That chunk cleaner type doesn't exist."
+  gave_cleaner: "<green>Gave {amount}x {type} to {player}."
+  placed_denied_same_chunk: "<red>There is already an active chunk cleaner in this chunk."
+  placed_denied_protected: "<red>You cannot place a chunk cleaner in a protected region."
+  start_cleaning: "<green>Started cleaning chunk area {coords} (type {type})."
+  cancel_no_nearby: "<red>You are not near an active chunk cleaner you own."
+  cancel_success: "<green>Cancelled the chunk cleaner at {coords}."
+  reload_success: "<green>Reloaded config and plugin data."
+  list_header: "<gold>Active Chunk Cleaners (page {page}/{max})"
+  list_entry: "<yellow>{index}. <white>{owner} <gray>({coords}) <gold>{type} <gray>age={age}s"
+  cannot_place_in_same_chunk: "<red>A chunk cleaner is already active in this chunk."
+  cannot_place_in_protected: "<red>Cannot place chunk cleaners in protected regions."
+
+  # Admin command messages (used by /chunkcleaners admin ...)
+  admin:
+    help_header: "<gold>ChunkCleaners Admin Commands"
+    help_lines:
+      - "<yellow>/chunkcleaners admin save <white>- Save all active cleaners to disk"
+      - "<yellow>/chunkcleaners admin savetask <uuid> <white>- Save progress for a specific task"
+      - "<yellow>/chunkcleaners admin list <white>- List active tasks"
+      - "<yellow>/chunkcleaners admin status <uuid> <white>- Show detailed status for a task"
+    save_success: "<green>Saved all active cleaners to disk."
+    save_fail: "<red>Failed to save: {error}"
+    savetask_success: "<green>Saved progress for task {id}"
+    savetask_no_task: "<red>No active task with that UUID."
+    savetask_invalid_uuid: "<red>Invalid UUID: {id}"
+    help_no_permission: "<red>You don't have permission to use admin commands."
+    list_header: "<gold>Active Chunk Cleaners: <gray>({count})"
+    list_empty: "<yellow>No active chunk cleaners."
+    status_not_found: "<red>No active task with that UUID."
+    status_world_unloaded: "<red>World not loaded: {world}"
+    status_progress_line: "<gold>Progress: <white>{percent}% ({processed}/{total} levels)"
+    status_eta_line: "<gold>ETA (est): <white>{seconds}s"
+    status_pointers: "<gold>Chunk index: <white>{idx} <gold>Y pointer: <white>{y}"
+
+  # Main command messages and usage (used by /chunkcleaners and alias /cc)
+  main:
+    usage_header: "<yellow>ChunkCleaners commands:"
+    usage_lines:
+      - "<yellow>/chunkcleaners give <player> <type> [amount] <white>- Give a cleaner to a player"
+      - "<yellow>/chunkcleaners list <white>- List active cleaners"
+      - "<yellow>/chunkcleaners reload <white>- Reload plugin config"
+      - "<yellow>/chunkcleaners admin <sub> <white>- Admin utilities (requires permission)"
+    reload_success: "<green>Configuration reloaded."
+    reload_fail: "<red>Failed to reload: {error}"
+    give_no_permission: "<red>You don't have permission to give cleaners."
+    give_success: "<green>Gave {amount}x {type} to {player}."
+
+# ----------------------------------------------------------------
+# Behaviour toggles & persistence
+# ----------------------------------------------------------------
+prevent_same_chunk: true          # if true, plugin prevents two cleaners in same chunk
+save_on_shutdown: true            # save active cleaners to persistence-file on shutdown
+persistence-file: data/active-cleaners.yml
+
+persistence:
+  autosave_enabled: true
+  autosave_interval_seconds: 60   # save every N seconds to reduce lost progress
+
+# Hot reload (watch config.yml and reload automatically)
+hot_reload:
+  enabled: true
+  file: config.yml
+  poll_interval_ms: 1000
+
+# ----------------------------------------------------------------
+# Integrations: enable only the plugins you run on the server
+# - WorldGuard: region/build flag checks
+# - GriefPrevention: claim checks
+# - Factions: FactionsUUID or MassiveCore Factions detection
+# - CoreProtect: batch-per-chunk logging
+# ----------------------------------------------------------------
+integrations:
+  worldguard: true
+  griefprevention: true
+  factions: true
+  coreprotect: true
+
+# ----------------------------------------------------------------
+# Performance tuning and adaptive throttling
+#
+# Notes:
+# - Start conservative. Increase slowly while monitoring TPS.
+# - size-aware scaling makes larger cleaners do more work per tick.
+# ----------------------------------------------------------------
+performance:
+  # Baseline knobs
+  max_chunks_per_interval: 1     # baseline number of chunks to attempt per scheduler interval
+  y_batch_size: 1                # baseline number of vertical layers per chunk job
+  ticks_per_chunk_interval: 2    # scheduler repeat interval (ticks)
+
+  # Adaptive throttling
+  tps_threshold: 18.0
+  tps_min_chunks_per_interval: 1
+  tps_min_y_batch_size: 1
+  tps_smoothing: 0.75
+  tps_check_interval_ticks: 1
+
+  # ETA smoothing window in seconds used to compute a smoothed processing rate
+  eta_window_seconds: 8
+
+  # Size-aware scaling (make larger cleaners process proportionally more work)
+  size_scale_enabled: true
+  # scaleFactor = min(size_scale_cap, size * size_scale_multiplier)
+  size_scale_multiplier: 1
+  size_scale_cap: 8
+
+  # If >1, scheduler interval can be divided for larger cleaners (use with caution)
+  aggressive_interval_divisor: 1
+
+# ----------------------------------------------------------------
+# CoreProtect logging (batch-per-chunk) — avoids overwhelming CoreProtect
+# - log_chunk_summary: send single summary per completed chunk (recommended)
+# - flush_interval_ticks / max_entries_per_flush control throughput
+# ----------------------------------------------------------------
+coreprotect:
+  enabled: true
+  log_chunk_summary: true
+  flush_interval_ticks: 20
+  max_entries_per_flush: 50
+  queue_max_size: 5000
+  queue_trim_to: 4000
+  # legacy fallback (not used when log_chunk_summary=true)
+  log_every_n: 10
+
+# ----------------------------------------------------------------
+# Safety & operational notes
+# ----------------------------------------------------------------
+# - If you enable integrations, the plugin will refuse to edit protected chunks on behalf of offline owners.
+#   This prevents accidental modification of other players' claims/regions.
+# - Monitor server TPS when running large cleaners. The plugin adjusts its throughput based on TPS.
+# - If you use CoreProtect logging in high-scale environments, ensure CoreProtect and disk IO can handle the load.
+# - For quick recovery, persistence.autosave_interval_seconds default = 60s. You may lower for more frequent saves
+#   at the cost of increased disk writes.
